@@ -167,56 +167,40 @@
   </script>
   <!-- 导入模板引擎 -->
   <script src="./js/template-web.js"></script>
-
-  <!-- 设置分类数据使用的模板 -->
   <script type="text/template" id="category">
     {{each $data}}
-      <tr>
-          <td>{{$value.name}}</td>
-          <td>{{$value.slug}}</td>
-          <td class="text-center">
-            <a href='javascript:;' class="btn btn-info btn-xs"  data-id="{{$value.id}}">编辑</a>
-            <a href="javascript:;" class="btn btn-danger btn-xs" data-id="{{$value.id}}">删除</a>
-          </td>
-        </tr>
-        {{/each}}
+         <tr>
+            <td>{{$value.name}}</td>
+            <td>{{$value.slug}}</td>
+            <td class="text-center">
+              <a href='javascript:;'class="btn btn-info btn-xs " data-id="{{$value.id}}">编辑</a>
+              <a href="javascript:;"class="btn btn-danger btn-xs" data-id="{{$value.id}}">删除</a>
+            </td>
+          </tr> 
+    {{/each}}
+    
     </script>
   <script>
-    /*
-        功能分析：
-          1 根据接口响应的数据，渲染分类信息表格
-            - 设置模板，生成结构
-          2 新增分类
-            - 点击新增按钮 #model_add （注意名称，结构中不是modal）
-            - 检测内容是否填写完整
-              - .cate_name  .cate_slug
-          3 删除分类
-          4 编辑分类
-         
-      */
-    // 1 请求服务端数据，获取分类信息
     $.get({
       url: 'http://localhost:8000/admin/category_search',
       success: function (res) {
+        console.log(res)
         if (res.code === 200) {
-          console.log(res);
-          // 通过模板生成结构，并设置给tbody标签
-          $('tbody').html(template('category', res.data));
+          $('tbody').html(template('category', res.data))
         }
       }
-    });
-
-
-    // 2 设置新增功能
+    })
+    // 设置新增功能
     $('#model_add').on('click', function () {
-      // 2.1 检测内容是否为空
+      // 检测内容是否为空
       var nameVal = $('.cate_name').val();
       var slugVal = $('.cate_slug').val();
-      if (nameVal === '' || slugVal === '') {
-        alert('不好意思，请完整填写表单');
+      if (nameVal === ' ' || slugVal === ' ') {
+        alert('不好意思,请填写完整的表单');
         return;
       }
-      // 2.2 将数据发送给服务端
+
+      // 将数据发给服务端
       $.ajax({
         type: 'post',
         url: 'http://localhost:8000/admin/category_add',
@@ -225,88 +209,36 @@
           slug: slugVal
         },
         success: function (res) {
-          // 检测，如果成功，将结构添加到tbody中
+          console.log(res)
           if (res.code === 200) {
-            // * 注意：新增操作成功后，除了响应状态外，还应该响应新数据的id
-            //    - 这里我们通过 location.reload() 实现功能
-            //      - 因为我们要对当前页面设置增删改查4个功能
-            //        - 其中删除和编辑必须要id
-            //        - 刷新后会自动调用category_search接口，从而得到我们需要的id
-            location.reload(); // 刷新页面
-          }
-        }
-      });
-    });
 
-    // 3 设置删除功能
-    $('tbody').on('click', '.btn-danger', function () {
-      // 3.1 获取data-id属性
-      var id = $(this).data('id');
-
-      // 3.2 请求服务端，进行删除操作
-      // 提前获取要操作的tr标签
-      var $tr = $(this).parents('tr');
-      $.post({
-        url: 'http://localhost:8000/admin/category_delete',
-        data: {
-          id: id
-        },
-        success: function (res) {
-          // 检测是否删除成功
-          if (res.code === 200) {
-            $tr.remove();
-          }
-        }
-      });
-    });
-
-    // 4 设置编辑功能
-    var id;
-    $('tbody').on('click', '.btn-info', function () {
-      // 4.1 获取data-id属性
-      id = $(this).data('id');
-
-      // 4.2 将当前数据内容填写到对应的输入框中
-      $('.cate_name').val($(this).parents('tr').children('td').eq(0).text());
-      $('.cate_slug').val($(this).parents('tr').children('td').eq(1).text());
-
-      // 4.3 需要将设置的编辑按钮显示，将新增按钮隐藏
-      $('#model_add').addClass('hide');
-      $('#modal_edit').removeClass('hide');
-    });
-
-    // 因为前面修改了结构，需要给.btn-add设置一个显示隐藏的切换
-    $('.btn-add').on('click', function () {
-      $('#model_add').removeClass('hide');
-      $('#modal_edit').addClass('hide');
-    });
-
-    // 设置编辑按钮的操作
-    $('#modal_edit').on('click', function () {
-      // 检测是否完整填写表单
-      if ($('.cate_name').val() === '' || $('.cate_slug').val() === '') {
-        alert('请完整填写表单');
-        return;
-      }
-
-      // 发送请求，进行编辑操作
-      $.post({
-        url: 'http://localhost:8000/admin/category_edit',
-        data: {
-          name: $('.cate_name').val(),
-          slug: $('.cate_slug').val(),
-          id: id
-        },
-        success: function (res) {
-          // 检测修改是否成功
-          if (res.code === 200) {
             location.reload();
           }
         }
-      });
-
+      })
     });
-  </script>
-</body>
+    // 设置删除 功能
+   $('tbody').on('click','.btn-danger',function(){
+     var id=$(this).data('id');
+     var $tr=$(this).parents('tr');
+     $.post({
+       url: 'http://localhost:8000/admin/category_delete',
+       data:{
+         id:id
+       },
+       success:function(res){
+         if(res.code===200){
+           $tr.remove();
+         }
+       }
+     })
+   })
 
-</html>
+  //  设置编辑功能
+  var id ;
+  $('tbody').on('click','.btn-info',function(){
+     id=$(this).data('id');
+  })
+  $('.cate_name').val($(this).parents('tr').children('td').eq(0).text())
+  $('.cate_slug').val($(this).parents('tr').children('td').eq(1).text())
+  </script>
